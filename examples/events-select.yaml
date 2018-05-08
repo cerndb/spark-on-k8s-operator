@@ -1,0 +1,60 @@
+#
+# Copyright 2017 CERN/Switzerland
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+apiVersion: "sparkoperator.k8s.io/v1alpha1"
+kind: SparkApplication
+metadata:
+  name: events-select
+  namespace: default
+spec:
+  type: Scala
+  mode: cluster
+  image: "gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s-xrootd:v2.3.0-2.7.4-master"
+  imagePullPolicy: Always
+  mainClass: org.sparkservice.sparkrootapplications.examples.EventsSelect
+  mainApplicationFile: "local:///opt/spark/examples/jars/spark-service-examples_2.11-0.0.1.jar"
+  arguments:
+    - "root://eospublic.cern.ch://eos/opendata/cms/Run2010B/MuOnia/AOD/Apr21ReReco-v1/0000/FEF1B99B-BF77-E011-B0A0-E41F1318174C.root"
+  sparkConf:
+    "spark.kubernetes.authenticate.submission.caCertFile": /spark-secrets/client-ca
+    "spark.kubernetes.authenticate.submission.clientKeyFile": /spark-secrets/client-key
+    "spark.kubernetes.authenticate.submission.clientCertFile": /spark-secrets/client-cert
+    "spark.kubernetes.authenticate.driver.caCertFile": /spark-secrets/client-ca
+    "spark.kubernetes.authenticate.driver.clientKeyFile": /spark-secrets/client-key
+    "spark.kubernetes.authenticate.driver.clientCertFile": /spark-secrets/client-cert
+  deps:
+    jars:
+      - http://central.maven.org/maven2/org/diana-hep/root4j/0.1.6/root4j-0.1.6.jar
+      - http://central.maven.org/maven2/org/apache/bcel/bcel/5.2/bcel-5.2.jar
+      - http://central.maven.org/maven2/org/diana-hep/spark-root_2.11/0.1.16/spark-root_2.11-0.1.16.jar
+  driver:
+    cores: 1
+    coreLimit: "1000m"
+    memory: "1024m"
+    labels:
+      version: 2.3.0
+    serviceAccount: spark
+    secrets:
+      - name: spark-secrets
+        path: /spark-secrets
+        secretType: Opaque
+  executor:
+    instances: 1
+    cores: 2
+    memory: "2048m"
+    labels:
+      version: 2.3.0
+  restartPolicy: Never
