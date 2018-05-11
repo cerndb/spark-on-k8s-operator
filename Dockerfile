@@ -26,7 +26,6 @@ RUN dep ensure -vendor-only
 COPY . ./
 RUN go generate && go build -o /usr/bin/spark-operator
 
-
-FROM gcr.io/ynli-k8s/spark:v2.3.0
+FROM gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s:v2.3.0-xrootd-s3
 COPY --from=builder /usr/bin/spark-operator /usr/bin/
 ENTRYPOINT ["/usr/bin/spark-operator"]
