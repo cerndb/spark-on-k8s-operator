@@ -4,8 +4,9 @@
 **This work is in progress and experimental**
 
 This repository is an attempt to run cloud-native, on-demand and self-healing Spark on Kubernetes natively on Openstack private cloud.
+It is an alternative approach to [cern-spark-service](https://pypi.org/project/cern-spark-service/)
 
-It is based on [GoogleCloudPlatform/spark-on-k8s-operator](hhttps://github.com/GoogleCloudPlatform/spark-on-k8s-operator)
+Repository is based on [GoogleCloudPlatform/spark-on-k8s-operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator)
 
 ## Architecture
 
@@ -14,11 +15,12 @@ It is based on [GoogleCloudPlatform/spark-on-k8s-operator](hhttps://github.com/G
 
 ## User guide - cluster management and submitting applications
 
-* [Openstack Spark cluster management - opsparkctl](opsparkctl/README.md)
+* [Openstack Spark cluster management - opsparkctl](cmd/README.md)
 * [Application examples](examples)
 * [Submit Spark jobs - sparkctl](sparkctl/README.md)
 
 ## Spark Operator overview
+
 * [Quick Start Guide - SparkOperator](docs/quick-start-guide.md)
 * [API Specification - SparkOperator](docs/api.md) 
 * [Detailed Guide - SparkOperator ](docs/user-guide.md)

@@ -14,6 +14,6 @@
 # limitations under the License.
 #
 
-FROM gcr.io/ynli-k8s/spark:v2.3.0
+FROM gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s:v2.3.0-xrootd-s3
 COPY spark-operator /usr/bin/
 ENTRYPOINT ["/usr/bin/spark-operator"]
