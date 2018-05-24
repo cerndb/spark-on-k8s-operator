@@ -26,6 +26,13 @@ spec:
   imagePullPolicy: Always
   mainClass: org.sparkservice.sparkrootapplications.examples.SparkPi
   mainApplicationFile: "local:///opt/spark/examples/jars/spark-service-examples_2.11-0.0.1.jar"
+  hadoopConf:
+    "fs.s3a.endpoint": {{ endpoint }}
+    "fs.s3a.access.key": {{ access }}
+    "fs.s3a.secret.key": {{ secret }}
+  sparkConf:
+    "spark.eventLog.enabled": "true"
+    "spark.eventLog.dir": s3a://{{ cluster-name }}/spark-events
   driver:
     cores: 1
     coreLimit: "1000m"
