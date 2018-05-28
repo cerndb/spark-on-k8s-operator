@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Google LLC
+# Copyright 2018 CERN/Switzerland
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,27 @@
 apiVersion: "sparkoperator.k8s.io/v1alpha1"
 kind: SparkApplication
 metadata:
-  name: spark-pi
+  name: secure-eos-events-select
   namespace: default
 spec:
   type: Scala
   mode: cluster
   image: "gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s:v2.3.0-xrootd-s3"
   imagePullPolicy: Always
-  mainClass: org.sparkservice.sparkrootapplications.examples.SparkPi
+  mainClass: org.sparkservice.sparkrootapplications.examples.EventsSelect
   mainApplicationFile: "local:///opt/spark/examples/jars/spark-service-examples_2.11-0.0.1.jar"
+  arguments:
+    - "root://eosuser.cern.ch/eos/user/p/pmrowczy/Shared/evsel.root"
+  deps:
+    jars:
+      - http://central.maven.org/maven2/org/diana-hep/root4j/0.1.6/root4j-0.1.6.jar
+      - http://central.maven.org/maven2/org/apache/bcel/bcel/5.2/bcel-5.2.jar
+      - http://central.maven.org/maven2/org/diana-hep/spark-root_2.11/0.1.16/spark-root_2.11-0.1.16.jar
+  sparkConf:
+    # Secure EOS - During submission of job,
+    # ensure to have krb5cc_0 ticket inside your local HADOOP_CONF_DIR
+    "spark.kubernetes.driverEnv.KRB5CCNAME": /etc/hadoop/conf/krb5cc_0
+    "spark.executorEnv.KRB5CCNAME": /etc/hadoop/conf/krb5cc_0
   driver:
     cores: 1
     coreLimit: "1000m"

@@ -17,8 +17,8 @@
 apiVersion: "sparkoperator.k8s.io/v1alpha1"
 kind: ScheduledSparkApplication
 metadata:
-  name: {{ app-name }}
-  namespace: {{ namespace }}
+  name: spark-pi-schedule
+  namespace: default
 spec:
   schedule: "@every 5m"
   concurrencyPolicy: Allow
