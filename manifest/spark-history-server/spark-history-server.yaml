@@ -34,6 +34,10 @@ spec:
         app.kubernetes.io/name: spark-history-server
         app.kubernetes.io/version: v2.3.0
     spec:
+      volumes:
+      - name: spark-default-config
+        configMap:
+          name: spark-default-config
       containers:
         - name: spark-history-server
           image: "gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s:v2.3.0-xrootd-s3"
@@ -42,17 +46,14 @@ spec:
           ports:
             - containerPort: 18080
               protocol: TCP
+          volumeMounts:
+            - name: spark-default-config
+              mountPath: /opt/spark/conf
           env:
             - name: SPARK_NO_DAEMONIZE
               value: "true"
-            - name: SPARK_HISTORY_OPTS
-              value: >-
-                -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
-                -Dspark.hadoop.fs.s3a.endpoint={{ endpoint }}
-                -Dspark.hadoop.fs.s3a.access.key={{ access }}
-                -Dspark.hadoop.fs.s3a.secret.key={{ secret }}
-                -Dspark.history.fs.logDirectory=s3a://{{ cluster-name }}/spark-events
-                -Dspark.history.fs.update.interval=1s
+            - name: SPARK_CONF_DIR
+              value: /opt/spark/conf
 ---
 apiVersion: v1
 kind: Service
