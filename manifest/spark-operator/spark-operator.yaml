@@ -39,11 +39,21 @@ spec:
         pending: []  
     spec:
       serviceAccountName: sparkoperator
+      volumes:
+      - name: spark-default-config
+        configMap:
+          name: spark-default-config
       containers:
       - name: sparkoperator
         image: gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s-operator:v1alpha1
         imagePullPolicy: Always
         command: ["/usr/bin/spark-operator"]
+        env:
+          - name: SPARK_CONF_DIR
+            value: /opt/spark/conf
+        volumeMounts:
+          - name: spark-default-config
+            mountPath: /opt/spark/conf
         args:
         - -logtostderr
         - -enable-initializer=true
