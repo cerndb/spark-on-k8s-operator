@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/GoogleCloudPlatform/spark-on-k8s-operator.svg?branch=master)](https://travis-ci.org/GoogleCloudPlatform/spark-on-k8s-operator.svg?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoogleCloudPlatform/spark-on-k8s-operator)](https://goreportcard.com/report/github.com/GoogleCloudPlatform/spark-on-k8s-operator)
 
-**This work is in progress and experimental**
+**This work is in progres, experimental and for evaluation purposes only**
 
 ## Community
 
@@ -15,20 +15,16 @@ Repository is based on [GoogleCloudPlatform/spark-on-k8s-operator](https://githu
 
 ## Architecture
 
-* [SparkOperator and sparkctl Design](docs/design.md)
-* [Original project](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator)
+* [SparkOperator Design](docs/design.md)
+* [Quick Start Guide - SparkOperator](docs/quick-start-guide.md)
+* [API Specification - SparkOperator](docs/api.md) 
+* [Detailed Guide - SparkOperator ](docs/user-guide.md)
 
-## User guide - cluster management and submitting applications
+## Developer guide - cluster management and submitting applications
 
 * [Openstack Spark cluster management - opsparkctl](cmd/README.md)
 * [Application examples](examples)
 * [Submit Spark jobs - sparkctl](sparkctl/README.md)
-
-## Spark Operator overview
-
-* [Quick Start Guide - SparkOperator](docs/quick-start-guide.md)
-* [API Specification - SparkOperator](docs/api.md) 
-* [Detailed Guide - SparkOperator ](docs/user-guide.md)
 
 ## Motivations
 
