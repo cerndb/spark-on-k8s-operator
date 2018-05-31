@@ -3,6 +3,19 @@ from kubernetes.client import Configuration
 import os
 import errno
 
+
+class KubeClusterInfo(object):
+    def __init__(self, name, api_address, ca, key, cert):
+        self.name = name
+        self.api_address = api_address
+        self.ca = ca # Full content of certificate
+        self.key = key # Full content of certificate
+        self.cert = cert # Full content of certificate
+
+    def __repr__(self):
+        return "<Name: %s>, <IP: %s>, <CA: %s>, <KEY: %s>, <CERT: %s>" % (self.name, self.api_address, self.ca, self.key, self.cert)
+
+
 class KubeConfigClient(object):
     def __init__(self):
         self._cfg_dir_base = os.path.join(os.path.expanduser("~"), '.kube')
@@ -56,20 +69,26 @@ class KubeConfigClient(object):
 
     def load_local_config(self):
         print
-        print "Kubernetes client configuration.."
+        print "[Kubernetes client configuration..]"
         self._cfg_file = os.path.join(self._cfg_dir_base, 'config')
 
         if not os.path.exists(self._cfg_file):
             raise Exception("Cannot find configuration for cluster at %s"%(self._cfg_file))
 
+        # Load default configuration
         config.load_kube_config(config_file=self._cfg_file)
         c = Configuration()
         c.assert_hostname = False
         Configuration.set_default(c)
-        print("Kubernetes master: %s" % c.host)
-        print("Kubernetes config used: %s" % self._cfg_file)
-        print("Kubernetes cluster ssl ca: %s" % c.ssl_ca_cert)
-        print("Kubernetes cluster cert: %s" % c.cert_file)
-        print("Kubernetes cluster key: %s" % c.key_file)
 
-        return c
+        # Extend with cluster name
+        with open(self._cfg_file, 'r') as f:
+            import yaml
+            config_file = yaml.load(f)
+            name = config_file["clusters"][0]["name"]
+            c.name = name
+
+            print("Kubernetes config used: %s" % self._cfg_file)
+            print("Kubernetes cluster name: %s" % c.name)
+            print("Kubernetes master: %s" % c.host)
+            return c

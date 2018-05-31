@@ -57,9 +57,13 @@ class SparkServiceShell(object):
         create_subparser.add_parser(
             'kube', help='Create a kubernetes cluster over Openstack and fetch configuration locally')
 
-        ## Create spark command
+        ## Create local config command
         create_subparser.add_parser(
             'local-kube-config', help='Fetch locally kubernetes cluster configuration')
+
+        ## Create spark command
+        create_subparser.add_parser(
+            'spark', help='Creates Spark on Kubernetes Operator on the cluster')
 
         # Parse and route to proper class
         args, additional = parser.parse_known_args()
@@ -71,6 +75,9 @@ class SparkServiceShell(object):
             elif args.create_command == 'local-kube-config' and not create_command.KubeOpenstackFetchCommand().run(args, additional):
                 print "** ERROR **"
                 print "Check command, for help: opsparkctl create local-kube-config --help"
+            elif args.create_command == 'spark' and not create_command.KubeSparkCreateCommand().run(args, additional):
+                print "** ERROR **"
+                print "Check command, for help: opsparkctl create spark --help"
 
 
 def main(argv=None):
