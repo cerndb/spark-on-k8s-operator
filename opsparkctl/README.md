@@ -16,6 +16,12 @@ TODO: Add usage guide
 
 ### Developer guide
 
+Before install, ensure that **python version is 2.7.5 or above**
+
+```
+$ python --version
+```
+
 To install
 
 ```
@@ -27,7 +33,7 @@ To upgrade
 
 ```
 $ cd <path-to>/spark-on-k8s-operator
-$ sudo pip install --upgrade --no-deps --force-reinstall .
+$ sudo pip install --upgrade .
 ```
 
 Increase the version and correct documentation in

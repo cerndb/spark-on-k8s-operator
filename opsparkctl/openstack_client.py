@@ -5,7 +5,7 @@ from keystoneclient.v3.client import Client as KeystoneClient
 from magnumclient.client import Client as MagnumClient
 from magnumclient.common import utils as magnum_utils
 from novaclient.client import Client as NovaClient
-from . import cluster
+from . import kube_config
 
 import qprompt
 import base64
@@ -131,6 +131,7 @@ class CernOpentackClient(object):
                                labels=self.__KUBE_CLUSTER_LABELS).to_dict()
 
         print
+        print "[Kubernetes cluster creation..]"
         sys.stdout.write("Kubernetes cluster [name: %s] creation in progress.."%(name))
         while 1:
             cluster_config = magnum.clusters.get(name)
@@ -175,7 +176,7 @@ class CernOpentackClient(object):
 
     def get_cluster(self, project_id, cluster_name):
         print
-        print "Kubernetes cluster [name: %s] configuration init" % (cluster_name)
+        print "[Kubernetes cluster [name: %s] configuration init]" % (cluster_name)
 
         cluster_config = self.get_cluster_info(project_id, cluster_name)
         opts = {
@@ -183,7 +184,7 @@ class CernOpentackClient(object):
         }
 
         tls = self.get_pems(project_id, opts)
-        return cluster.KubeClusterInfo(cluster_config.name, cluster_config.api_address, tls['ca'], tls['key'], tls['cert'])
+        return kube_config.KubeClusterInfo(cluster_config.name, cluster_config.api_address, tls['ca'], tls['key'], tls['cert'])
 
     def __get_cluster_name(self):
         print

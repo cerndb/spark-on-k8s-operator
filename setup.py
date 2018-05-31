@@ -13,8 +13,6 @@ if sys.argv[-1] == 'publish':
     os.system('twine upload dist/*')
     sys.exit()
 
-packages = ['opsparkctl']
-
 about = {}
 with open(os.path.join(here, 'opsparkctl', '__version__.py'), 'r') as f:
     exec(f.read(), about)
@@ -23,8 +21,8 @@ with open(os.path.join(here, 'opsparkctl', 'README.rst'), 'r') as f:
     readme = f.read()
 
 requires = [
-    'python>=2.7.5',
-    'python-magnumclient>=2.7.0', # Apache-2.0
+    'boto>=2.48.0',
+    'python-magnumclient>=2.7.0',
     'qprompt>=0.9.7',
     'python-novaclient>=9.1.1',
     'keystoneauth1>=3.3.0',
@@ -49,13 +47,19 @@ setup(
     author=about['__author__'],
     author_email=about['__author_email__'],
     url=about['__url__'],
-    packages=packages,
+    packages=['opsparkctl', 'manifest'],
+    package_data={
+        'manifest': [
+            'spark-operator/*',
+            'spark-operator-base/*',
+            'spark-history-server/*',
+        ]},
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'opsparkctl = opsparkctl.shell:main',
         ],
     },
-    include_package_data=True,
     python_requires=about['__python_requires__'],
     install_requires=requires,
     license=about['__license__'],
