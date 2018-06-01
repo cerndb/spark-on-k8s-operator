@@ -62,8 +62,9 @@ class SparkServiceShell(object):
             'local-kube-config', help='Fetch locally kubernetes cluster configuration')
 
         ## Create spark command
-        create_subparser.add_parser(
+        spark_create_parser = create_subparser.add_parser(
             'spark', help='Creates Spark on Kubernetes Operator on the cluster')
+        spark_create_parser.add_argument("--update", default=False, action='store_true', dest='spark_update', help='Update the spark operator on the cluster')
 
         # Parse and route to proper class
         args, additional = parser.parse_known_args()
