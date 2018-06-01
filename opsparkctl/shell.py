@@ -4,6 +4,7 @@ import argparse
 import sys
 from . import __version__
 from . import create_command
+from . import update_command
 
 min_version = __version__.__python_min_version__.split('.')
 if not (sys.version_info[0] >= int(min_version[0]) and sys.version_info[1] >= int(min_version[1]) and sys.version_info[2] >= int(min_version[2])):
@@ -52,19 +53,24 @@ class SparkServiceShell(object):
         create_parser = subparsers.add_parser(
             'create', help='Create, configure and initialize spark on kubernetes cluster')
         create_subparser = create_parser.add_subparsers(help='create commands', dest='create_command')
-
         ## Create kube command
         create_subparser.add_parser(
             'kube', help='Create a kubernetes cluster over Openstack and fetch configuration locally')
-
         ## Create local config command
         create_subparser.add_parser(
             'local-kube-config', help='Fetch locally kubernetes cluster configuration')
-
         ## Create spark command
         spark_create_parser = create_subparser.add_parser(
             'spark', help='Creates Spark on Kubernetes Operator on the cluster')
         spark_create_parser.add_argument("--update", default=False, action='store_true', dest='spark_update', help='Update the spark operator on the cluster')
+
+        # Update command
+        update_parser = subparsers.add_parser(
+            'update', help='Update components of spark on kubernetes cluster')
+        update_subparser = update_parser.add_subparsers(help='update commands', dest='update_command')
+        ## Update spark command
+        update_subparser.add_parser(
+            'spark', help='Update Spark on Kubernetes Operator on the cluster')
 
         # Parse and route to proper class
         args, additional = parser.parse_known_args()
@@ -79,6 +85,10 @@ class SparkServiceShell(object):
             elif args.create_command == 'spark' and not create_command.KubeSparkCreateCommand().run(args, additional):
                 print "** ERROR **"
                 print "Check command, for help: opsparkctl create spark --help"
+        elif args.command == 'update':
+            if args.update_command == 'spark' and not update_command.KubeSparkUpdateCommand().run(args, additional):
+                print "** ERROR **"
+                print "Check command, for help: opsparkctl update spark --help"
 
 
 def main(argv=None):
