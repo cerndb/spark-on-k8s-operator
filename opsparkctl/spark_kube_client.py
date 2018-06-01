@@ -4,7 +4,7 @@ from kubernetes.client.rest import ApiException
 import yaml
 import pkgutil
 import boto.s3.connection
-
+import datetime
 class SparkK8SBase():
 
     def __init__(self, c):
@@ -108,7 +108,6 @@ class SparkK8SApi(SparkK8SBase):
                 api_instance.create_namespaced_role_binding(namespace=namespace, body=object_loaded)
             else:
                 raise Exception("Unsupported object kind [%s] for resource creation" % kind)
-
         except ApiException as e:
             print("ERROR: create unsuccessful [%s]/[%s %s]: %s" % (name, kind, namespace, e.reason))
             exit(2)
@@ -116,26 +115,48 @@ class SparkK8SApi(SparkK8SBase):
             if 'pending' in e.message:
                 #TODO: Handle case of Initializers bug, remove me in the future
                 print("INFO: Spark Operator Initializer pending status not reported")
-                pass
             else:
                 raise ValueError(e.message)
 
         print("SUCCESS: create object [%s]/[%s %s]" % (name, kind, namespace))
+        return True
 
-    def __exists_yaml_resources(self, body):
+    def __replace_resource(self, object_loaded):
+        api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
+        try:
+            api_instance = self.__get_api_instance(api_version)
+
+            if kind == "ConfigMap":
+                api_instance.replace_namespaced_config_map(name=name, namespace=namespace, body=object_loaded)
+            elif kind == "Deployment":
+                # Update deployment template label
+                object_loaded["spec"]["template"]["metadata"]["labels"]["date"] = datetime.datetime.now().strftime("%s")
+                api_instance.replace_namespaced_deployment(name=name, namespace=namespace, body=object_loaded)
+            else:
+                raise Exception("Unsupported object kind [%s] for resource creation" % kind)
+        except ApiException as e:
+            print("WARNING: create unsuccessful [%s]/[%s %s]: %s" % (name, kind, namespace, e.reason))
+            return False
+        except ValueError as e:
+            if 'pending' in e.message:
+                #TODO: Handle case of Initializers bug, remove me in the future
+                print("INFO: Spark Operator Initializer pending status not reported")
+            else:
+                raise ValueError(e.message)
+
+        print("SUCCESS: update object [%s]/[%s %s]" % (name, kind, namespace))
+        return True
+
+    def __create_yaml_resources(self, body, ignore_exists=False, update=False):
         # create an instance of the API class
         objects_loaded = yaml.load_all(body)
         for object_loaded in objects_loaded:
-            api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
-            if self.__check_resource(object_loaded):
-                return True
-        return False
-
-    def __create_yaml_resources(self, body, ignore_exists=False):
-        # create an instance of the API class
-        objects_loaded = yaml.load_all(body)
-        for object_loaded in objects_loaded:
-            self.__create_resource(object_loaded, ignore_exists)
+            if update:
+                if not self.__replace_resource(object_loaded):
+                    ## Try to create if replace fails
+                    self.__create_resource(object_loaded, ignore_exists)
+            else:
+                self.__create_resource(object_loaded, ignore_exists)
 
     def _create_spark_rbac(self):
         # Create spark rbac if does not exists
@@ -147,7 +168,7 @@ class SparkK8SApi(SparkK8SBase):
         spark_rbac_data = pkgutil.get_data('manifest', "spark-operator-base/spark-operator-rbac.yaml")
         return self.__create_yaml_resources(spark_rbac_data, ignore_exists=True)
 
-    def _create_spark_operator_data(self):
+    def _create_spark_operator_data(self, update=False):
         access_key, secret_key, endpoint, is_secure = SparkK8SApi.__get_s3_metadata()
         cluster_name = self.configuration.name
 
@@ -169,11 +190,11 @@ class SparkK8SApi(SparkK8SBase):
             access=access_key,
             secret=secret_key,
             cluster=cluster_name)
-        return self.__create_yaml_resources(spark_defaults_conf_data, ignore_exists=False)
+        return self.__create_yaml_resources(spark_defaults_conf_data, ignore_exists=False, update=update)
 
-    def _create_spark_operator_deployment(self):
+    def _create_spark_operator_deployment(self, update=False):
         spark_operator = pkgutil.get_data('manifest', "spark-operator/spark-operator.yaml")
-        return self.__create_yaml_resources(spark_operator, ignore_exists=False)
+        return self.__create_yaml_resources(spark_operator, ignore_exists=False, update=update)
 
     def create_spark_operator_base(self):
         print
@@ -186,11 +207,20 @@ class SparkK8SApi(SparkK8SBase):
 
         print
         print "[Spark on kubernetes operator config data init..]"
-        self._create_spark_operator_data()
+        self._create_spark_operator_data(update=False)
 
         print
         print "[Spark on kubernetes operator init..]"
-        self._create_spark_operator_deployment()
+        self._create_spark_operator_deployment(update=False)
+
+    def update_spark_operator_base(self):
+        print
+        print "[Spark on kubernetes operator config data update..]"
+        self._create_spark_operator_data(update=True)
+
+        print
+        print "[Spark on kubernetes operator update..]"
+        self._create_spark_operator_deployment(update=True)
 
 
 
