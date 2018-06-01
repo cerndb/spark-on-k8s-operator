@@ -64,7 +64,10 @@ class KubeSparkCreateCommand(base_command.BaseCommand):
         c = kube_config_client.load_local_config()
         spark_client = spark_kube_client.SparkK8SApi(c)
 
-        spark_client.create_spark_operator_base()
+        if args.spark_update:
+            spark_client.update_spark_operator_base()
+        else:
+            spark_client.create_spark_operator_base()
         return True
 
 
