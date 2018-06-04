@@ -60,6 +60,9 @@ kind: Service
 metadata:
   name: spark-history-service
   namespace: sparkoperator
+  labels:
+    app.kubernetes.io/name: spark-history-service
+    app.kubernetes.io/version: v2.3.0
 spec:
   type: NodePort
   selector:
