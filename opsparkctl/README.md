@@ -4,108 +4,39 @@
 
 NOTE: Package is currently customized to fully use CERN specific configurations by default: `opsparkctl/openstack_client.py`
 
-## Installation
-
 Before install, ensure that **python version is 2.7.5 or above**
 
 ```
 $ python --version
 ```
 
-To install
+To install locally with virtualenv
 
 ```
-$ sudo pip install --upgrade opsparkctl
+$ cd <path-to>/spark-on-k8s-operator
+$ virtualenv venv --system-site-packages
+$ source venv/bin/activate
+$ pip install .
 ```
+## Flags
 
-Or in case of local install (without sudo access)
+The following global flags are available for all the sub commands:
+* `--help`: Prints help
 
-```
-$ pip install --user --upgrade opsparkctl
-```
-## Usage
+## Available Commands
 
-Run help
+### Help
 
 ```
 $ opsparkctl --help
 ```
 
-Run help in case of local install (without sudo access)
+or
+
 ```
-$ $HOME/.local/bin/opsparkctl --help
+$ opsparkctl <command> --help
 ```
 
 TODO: Add usage guide
 
-## Documentation
-
-#### Map .local/bin folder to use directly
-
-To add ``$HOME/.local/bin`` so you can use ``opsparkctl``
-directly, edit your ``bashrc_profile`` file using e.g. ``nano`` or
-``vim``
-
-    $ nano ~/.bash_profile
-
-Add this to the end of the file
-
-    $ PATH=$PATH:$HOME/.local/bin
-    $ export PATH
-
-Logout or use
-
-    $ source ~/.bash_profile
-
-Test with e.g.
-
-    $ opsparkctl --help
-
-#### Errors during pip install
-
-In case you are receiving errors during pip installation, please retry with cleaning some pip local files, and ensure
-that you don't have some custom python paths temporarly enabled
-
-To clear local packages on Linux
-
-    $ rm -rf $HOME/.local/lib/python2.7
-    $ rm -rf $HOME/.cache/pip
-
-To check what python version is used
-
-    $ python --version
-
-To check what python is used
-
-    $ which python
-
-#### Developer guide
-
-If you wish to use virtualenv of Python, follow [http://sourabhbajaj.com/mac-setup/Python/virtualenv.html](http://sourabhbajaj.com/mac-setup/Python/virtualenv.html)
-
-To install
-
-```
-$ cd <path-to>/spark-on-k8s-operator
-$ sudo pip install .
-```
-
-To upgrade
-
-```
-$ cd <path-to>/spark-on-k8s-operator
-$ sudo pip install --upgrade .
-```
-
-Increase the version and correct documentation in
-
-    $ opsparkctl/__version__.py
-
-Cleanup
-
-    $ rm -rf build opsparkctl.egg-info dist
-
-Publish
-
-    $ python setup.py publish
     
