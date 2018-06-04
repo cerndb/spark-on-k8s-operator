@@ -2,7 +2,7 @@
 __title__ = 'opsparkctl'
 __description__ = 'Spark on Kubernetes and Openstack cluster management tool'
 __url__ = 'https://github.com/cerndb/spark-on-k8s-operator/tree/master/opsparkctl'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __build__ = 0x021804
 __author__ = 'CERN-IT-DB-SAS'
 __author_email__ = 'piotr.mrowczynski@cern.ch'

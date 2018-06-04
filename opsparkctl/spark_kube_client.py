@@ -211,17 +211,16 @@ class SparkK8SApi(SparkK8SBase):
         cluster_name = self.configuration.name
 
         # Ensure bucket exists
-        print("INFO: ensure bucket s3://%s in s3 exists" % cluster_name)
         s3_connection = SparkK8SApi.__get_s3_connection(endpoint, access_key, secret_key, is_secure)
         bucket = s3_connection.lookup(cluster_name)
         if not bucket:
-            s3_connection.create_bucket(cluster_name)
-        print("INFO: ensure bucket in s3 has s3://%s/spark-events initialized" % cluster_name)
+            bucket = s3_connection.create_bucket(cluster_name)
         spark_events_key = "spark-events/init"
         key = bucket.get_key(spark_events_key)
         if not key:
             key = bucket.new_key(spark_events_key)
         key.set_contents_from_string('Spark Events initialized')
+        print("SUCCESS: S3 at s3://%s/spark-events initialized" % cluster_name)
 
         spark_defaults_conf_data = pkgutil.get_data('manifest', "spark-operator/spark-config.yaml").format(
             endpoint=endpoint,
