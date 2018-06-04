@@ -35,17 +35,32 @@ class SparkK8SApi(SparkK8SBase):
             calling_format=boto.s3.connection.SubdomainCallingFormat(),
         )
 
+    def __format_labels(self, labels):
+        merged_labels = []
+        for label_key, label_value in labels.items():
+            merged_labels.append("%s=%s" % (label_key, label_value))
+        return ','.join(merged_labels)
+
     def __get_object_metadata(self, object_loaded):
         api_version = object_loaded["apiVersion"]
         kind = object_loaded["kind"]
-        name = None
-        namespace = None
-        if 'metadata' in object_loaded:
-            if 'namespace' in object_loaded["metadata"]:
-                namespace = object_loaded["metadata"]["namespace"]
-            if 'name' in object_loaded["metadata"]:
-                name = object_loaded["metadata"]["name"]
-        return api_version, kind, name, namespace
+
+        try:
+            name = object_loaded["metadata"]["name"]
+        except KeyError:
+            name = None
+
+        try:
+            namespace = object_loaded["metadata"]["namespace"]
+        except KeyError:
+            namespace = None
+
+        try:
+            labels =  self.__format_labels(object_loaded["metadata"]["labels"])
+        except KeyError:
+            labels = None
+
+        return api_version, kind, name, namespace, labels
 
     def __get_api_instance(self, api_version):
         if api_version == "v1":
@@ -57,8 +72,20 @@ class SparkK8SApi(SparkK8SBase):
         else:
             raise Exception("Unsupported api type [%s]" % api_version)
 
+    def __list_objects(self, namespace, api_version, kind, labels):
+        try:
+            api_instance = self.__get_api_instance(api_version)
+            if kind == "Service":
+                return api_instance.list_namespaced_service(namespace=namespace, label_selector=labels)
+            elif kind == "Pod":
+                return api_instance.list_namespaced_pod(namespace=namespace, label_selector=labels)
+            else:
+                raise Exception("Unsupported object kind [%s] for resource list" % kind)
+        except ApiException:
+            return None
+
     def __check_resource(self, object_loaded):
-        api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
+        api_version, kind, name, namespace, labels = self.__get_object_metadata(object_loaded)
 
         try:
             api_instance = self.__get_api_instance(api_version)
@@ -87,11 +114,11 @@ class SparkK8SApi(SparkK8SBase):
 
     def __create_resource(self, object_loaded, ignore_exists=False):
         if ignore_exists and self.__check_resource(object_loaded):
-            api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
+            api_version, kind, name, namespace, labels = self.__get_object_metadata(object_loaded)
             print("WARNING: create skipped [%s]/[%s %s]: Exists" % (name, kind, namespace))
             return
 
-        api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
+        api_version, kind, name, namespace, labels = self.__get_object_metadata(object_loaded)
         try:
             api_instance = self.__get_api_instance(api_version)
 
@@ -116,6 +143,7 @@ class SparkK8SApi(SparkK8SBase):
             else:
                 raise Exception("Unsupported object kind [%s] for resource creation" % kind)
         except ApiException as e:
+            print e
             print("ERROR: create unsuccessful [%s]/[%s %s]: %s" % (name, kind, namespace, e.reason))
             exit(2)
         except ValueError as e:
@@ -128,15 +156,15 @@ class SparkK8SApi(SparkK8SBase):
         print("SUCCESS: create object [%s]/[%s %s]" % (name, kind, namespace))
         return True
 
-    def __replace_resource(self, object_loaded):
-        api_version, kind, name, namespace = self.__get_object_metadata(object_loaded)
+    def __update_resource(self, object_loaded):
+        api_version, kind, name, namespace, labels = self.__get_object_metadata(object_loaded)
         try:
             api_instance = self.__get_api_instance(api_version)
 
             if kind == "ConfigMap":
                 api_instance.replace_namespaced_config_map(name=name, namespace=namespace, body=object_loaded)
             elif kind == "Service":
-                api_instance.replace_namespaced_service(name=name, namespace=namespace, body=object_loaded)
+                api_instance.patch_namespaced_service(name=name, namespace=namespace, body=object_loaded)
             elif kind == "Deployment":
                 # Update deployment template label
                 object_loaded["spec"]["template"]["metadata"]["labels"]["date"] = datetime.datetime.now().strftime("%s")
@@ -144,7 +172,8 @@ class SparkK8SApi(SparkK8SBase):
             else:
                 raise Exception("Unsupported object kind [%s] for resource creation" % kind)
         except ApiException as e:
-            print("WARNING: create unsuccessful [%s]/[%s %s]: %s" % (name, kind, namespace, e.reason))
+            print e
+            print("WARNING: update unsuccessful [%s]/[%s %s]: %s" % (name, kind, namespace, e.reason))
             return False
         except ValueError as e:
             if 'pending' in e.message:
@@ -161,7 +190,7 @@ class SparkK8SApi(SparkK8SBase):
         objects_loaded = yaml.load_all(body)
         for object_loaded in objects_loaded:
             if update:
-                if not self.__replace_resource(object_loaded):
+                if not self.__update_resource(object_loaded):
                     ## Try to create if replace fails
                     self.__create_resource(object_loaded, ignore_exists)
             else:
@@ -206,8 +235,35 @@ class SparkK8SApi(SparkK8SBase):
         return self.__create_yaml_resources(spark_operator, ignore_exists=False, update=update)
 
     def _create_spark_history(self, update=False):
-        spark_operator = pkgutil.get_data('manifest', "spark-history-server/spark-history-server.yaml")
-        return self.__create_yaml_resources(spark_operator, ignore_exists=False, update=update)
+        spark_history = pkgutil.get_data('manifest', "spark-history-server/spark-history-server.yaml")
+        return self.__create_yaml_resources(spark_history, ignore_exists=False, update=update)
+
+    def _spark_history_status(self):
+        spark_history = pkgutil.get_data('manifest', "spark-history-server/spark-history-server.yaml")
+        objects_loaded = yaml.load_all(spark_history)
+
+        service_ip = ""
+        service_port = ""
+        for object_loaded in objects_loaded:
+            api_version, kind, name, namespace, labels = self.__get_object_metadata(object_loaded)
+
+            if kind == "Service" and labels:
+                try:
+                    ## Try to find service port
+                    services_list =  self.__list_objects(namespace=namespace, api_version=api_version, kind=kind, labels=labels)
+                    service_port = services_list.items[0].spec.ports[0].node_port
+                except (KeyError, IndexError):
+                    pass
+            if kind == "Deployment":
+                try:
+                    ## Try to find pods of the deployment
+                    labels = self.__format_labels(object_loaded["spec"]["template"]["metadata"]["labels"])
+                    pod_list =  self.__list_objects(namespace=namespace, api_version="v1", kind="Pod", labels=labels)
+                    service_ip =  pod_list.items[0].status.host_ip
+                except (KeyError, IndexError):
+                    pass
+
+        print "SPARK HISTORY: http://%s:%s" % (service_ip, service_port)
 
     def create_spark_operator_base(self):
         print
@@ -244,5 +300,11 @@ class SparkK8SApi(SparkK8SBase):
         print
         print "[Spark history server update..]"
         self._create_spark_history(update=True)
+
+    def status(self):
+        print
+        print "[Spark status..]"
+
+        self._spark_history_status()
 
 

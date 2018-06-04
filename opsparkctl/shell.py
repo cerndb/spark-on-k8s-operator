@@ -5,6 +5,7 @@ import sys
 from . import __version__
 from . import create_command
 from . import update_command
+from . import status_command
 
 min_version = __version__.__python_min_version__.split('.')
 if not (sys.version_info[0] >= int(min_version[0]) and sys.version_info[1] >= int(min_version[1]) and sys.version_info[2] >= int(min_version[2])):
@@ -77,6 +78,10 @@ class SparkServiceShell(object):
         update_subparser.add_parser(
             'spark-history', help='Creates Spark on Kubernetes Operator on the cluster')
 
+        # Update command
+        status_parser = subparsers.add_parser(
+            'status', help='Get status of spark on kubernetes cluster')
+
         # Parse and route to proper class
         args, additional = parser.parse_known_args()
 
@@ -100,6 +105,10 @@ class SparkServiceShell(object):
             elif args.update_command == 'spark-history' and not update_command.KubeSparkHistoryUpdateCommand().run(args, additional):
                 print "** ERROR **"
                 print "Check command, for help: opsparkctl update spark-history --help"
+        elif args.command == 'status':
+            if not status_command.KubeSparkStatusCommand().run(args, additional):
+                print "** ERROR **"
+                print "Check command, for help: opsparkctl status --help"
 
 
 def main(argv=None):
