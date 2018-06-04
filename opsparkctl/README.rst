@@ -7,9 +7,9 @@ Command line tool `opsparkctl` holds all tools for creating/deleting/resizing/re
 
 Idea is to provide users and admins an architecture, in which user in general should be able to fetch configuration of the cluster he is allowed to use, and be able to seemlessly submit Spark jobs using `sparkctl`.
 
-Usage manual
-============
+Usage and developer manual
+==========================
 
-TODO: Refer to github README.md
+`Usage and developer manual <https://github.com/cerndb/spark-on-k8s-operator/blob/master/opsparkctl>`_
 
 
