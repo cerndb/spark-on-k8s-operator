@@ -66,6 +66,8 @@ class SparkK8SApi(SparkK8SBase):
                 return api_instance.read_namespaced_config_map(name=name, namespace=namespace)
             elif kind == "Deployment":
                 return api_instance.read_namespaced_deployment(name=name, namespace=namespace)
+            elif kind == "Service":
+                return api_instance.read_namespaced_service(name=name, namespace=namespace)
             elif kind == "ServiceAccount":
                 return api_instance.read_namespaced_service_account(name=name, namespace=namespace)
             elif kind == "Namespace":
@@ -97,6 +99,8 @@ class SparkK8SApi(SparkK8SBase):
                 api_instance.create_namespaced_config_map(namespace=namespace, body=object_loaded)
             elif kind == "Deployment":
                 api_instance.create_namespaced_deployment(namespace=namespace, body=object_loaded)
+            elif kind == "Service":
+                api_instance.create_namespaced_service(namespace=namespace, body=object_loaded)
             elif kind == "ServiceAccount":
                 api_instance.create_namespaced_service_account(namespace=namespace, body=object_loaded)
             elif kind == "Namespace":
@@ -131,6 +135,8 @@ class SparkK8SApi(SparkK8SBase):
 
             if kind == "ConfigMap":
                 api_instance.replace_namespaced_config_map(name=name, namespace=namespace, body=object_loaded)
+            elif kind == "Service":
+                api_instance.replace_namespaced_service(name=name, namespace=namespace, body=object_loaded)
             elif kind == "Deployment":
                 # Update deployment template label
                 object_loaded["spec"]["template"]["metadata"]["labels"]["date"] = datetime.datetime.now().strftime("%s")
@@ -199,6 +205,10 @@ class SparkK8SApi(SparkK8SBase):
         spark_operator = pkgutil.get_data('manifest', "spark-operator/spark-operator.yaml")
         return self.__create_yaml_resources(spark_operator, ignore_exists=False, update=update)
 
+    def _create_spark_history(self, update=False):
+        spark_operator = pkgutil.get_data('manifest', "spark-history-server/spark-history-server.yaml")
+        return self.__create_yaml_resources(spark_operator, ignore_exists=False, update=update)
+
     def create_spark_operator_base(self):
         print
         print "[Spark on kubernetes rbac init..]"
@@ -216,6 +226,11 @@ class SparkK8SApi(SparkK8SBase):
         print "[Spark on kubernetes operator init..]"
         self._create_spark_operator_deployment(update=False)
 
+    def create_spark_history(self):
+        print
+        print "[Spark history server init..]"
+        self._create_spark_history(update=False)
+
     def update_spark_operator_base(self):
         print
         print "[Spark on kubernetes operator config data update..]"
@@ -225,6 +240,9 @@ class SparkK8SApi(SparkK8SBase):
         print "[Spark on kubernetes operator update..]"
         self._create_spark_operator_deployment(update=True)
 
-
+    def update_spark_history(self):
+        print
+        print "[Spark history server update..]"
+        self._create_spark_history(update=True)
 
 
