@@ -22,7 +22,7 @@ Repository is based on [GoogleCloudPlatform/spark-on-k8s-operator](https://githu
 
 ## Developer guide - cluster management and submitting applications
 
-* [Openstack Spark cluster management - opsparkctl](cmd/README.md)
+* [Openstack Spark cluster management - opsparkctl](opsparkctl/README.md)
 * [Application examples](examples)
 * [Submit Spark jobs - sparkctl](sparkctl/README.md)
 

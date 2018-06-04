@@ -1,10 +1,29 @@
-# CERN Spark Service - Spark on Kubernetes and Openstack
+# Spark on Kubernetes and Openstack management tool
 
 **This work is in progress, experimental and for evaluation purposes only**
 
-NOTE: Package is customized to fully use CERN specific configurations: `opsparkctl/openstack_client.py`
+NOTE: Package is currently customized to fully use CERN specific configurations by default: `opsparkctl/openstack_client.py`
 
-### Usage and documentation
+## Installation
+
+Before install, ensure that **python version is 2.7.5 or above**
+
+```
+$ python --version
+```
+
+To install
+
+```
+$ sudo pip install --upgrade opsparkctl
+```
+
+Or in case of local install (without sudo access)
+
+```
+$ pip install --user --upgrade opsparkctl
+```
+## Usage
 
 Run help
 
@@ -12,15 +31,57 @@ Run help
 $ opsparkctl --help
 ```
 
+Run help in case of local install (without sudo access)
+```
+$ $HOME/.local/bin/opsparkctl --help
+```
+
 TODO: Add usage guide
 
-### Developer guide
+## Documentation
 
-Before install, ensure that **python version is 2.7.5 or above**
+#### Map .local/bin folder to use directly
 
-```
-$ python --version
-```
+To add ``$HOME/.local/bin`` so you can use ``opsparkctl``
+directly, edit your ``bashrc_profile`` file using e.g. ``nano`` or
+``vim``
+
+    $ nano ~/.bash_profile
+
+Add this to the end of the file
+
+    $ PATH=$PATH:$HOME/.local/bin
+    $ export PATH
+
+Logout or use
+
+    $ source ~/.bash_profile
+
+Test with e.g.
+
+    $ opsparkctl --help
+
+#### Errors during pip install
+
+In case you are receiving errors during pip installation, please retry with cleaning some pip local files, and ensure
+that you don't have some custom python paths temporarly enabled
+
+To clear local packages on Linux
+
+    $ rm -rf $HOME/.local/lib/python2.7
+    $ rm -rf $HOME/.cache/pip
+
+To check what python version is used
+
+    $ python --version
+
+To check what python is used
+
+    $ which python
+
+#### Developer guide
+
+If you wish to use virtualenv of Python, follow [http://sourabhbajaj.com/mac-setup/Python/virtualenv.html](http://sourabhbajaj.com/mac-setup/Python/virtualenv.html)
 
 To install
 
@@ -48,44 +109,3 @@ Publish
 
     $ python setup.py publish
     
-### Usage Recommendations
-
-**Map .local/bin folder to use directly**
-
-To add ``$HOME/.local/bin`` so you can use ``opsparkctl``
-directly, edit your ``bashrc_profile`` file using e.g. ``nano`` or
-``vim``
-
-    $ nano ~/.bash_profile
-
-Add this to the end of the file
-
-    $ PATH=$PATH:$HOME/.local/bin
-    $ export PATH
-
-Logout or use
-
-    $ source ~/.bash_profile
-
-Test with e.g.
-
-    $ opsparkctl --help
-
-**Errors during pip install**
-
-
-In case you are receiving errors during pip installation, please retry with cleaning some pip local files, and ensure
-that you don't have some custom python paths temporarly enabled
-
-To clear local packages on Linux
-
-    $ rm -rf $HOME/.local/lib/python2.7
-    $ rm -rf $HOME/.cache/pip
-
-To check what python version is used
-
-    $ python --version
-
-To check what python is used
-
-    $ which python
