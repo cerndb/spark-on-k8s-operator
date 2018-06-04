@@ -62,6 +62,9 @@ class SparkServiceShell(object):
         ## Create spark command
         create_subparser.add_parser(
             'spark', help='Creates Spark on Kubernetes Operator on the cluster')
+        ## Create spark-history command
+        create_subparser.add_parser(
+            'spark-history', help='Creates Spark on Kubernetes Operator on the cluster')
 
         # Update command
         update_parser = subparsers.add_parser(
@@ -70,6 +73,9 @@ class SparkServiceShell(object):
         ## Update spark command
         update_subparser.add_parser(
             'spark', help='Update Spark on Kubernetes Operator on the cluster')
+        ## Update spark-history command
+        update_subparser.add_parser(
+            'spark-history', help='Creates Spark on Kubernetes Operator on the cluster')
 
         # Parse and route to proper class
         args, additional = parser.parse_known_args()
@@ -84,10 +90,16 @@ class SparkServiceShell(object):
             elif args.create_command == 'spark' and not create_command.KubeSparkCreateCommand().run(args, additional):
                 print "** ERROR **"
                 print "Check command, for help: opsparkctl create spark --help"
+            elif args.create_command == 'spark-history' and not create_command.KubeSparkHistoryCreateCommand().run(args, additional):
+                print "** ERROR **"
+                print "Check command, for help: opsparkctl create spark-history --help"
         elif args.command == 'update':
             if args.update_command == 'spark' and not update_command.KubeSparkUpdateCommand().run(args, additional):
                 print "** ERROR **"
                 print "Check command, for help: opsparkctl update spark --help"
+            elif args.update_command == 'spark-history' and not update_command.KubeSparkHistoryUpdateCommand().run(args, additional):
+                print "** ERROR **"
+                print "Check command, for help: opsparkctl update spark-history --help"
 
 
 def main(argv=None):
