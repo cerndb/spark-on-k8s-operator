@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Google LLC
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
 # limitations under the License.
 #
 
-FROM golang:1.10.2-alpine as builder
+FROM golang:1.10.2 as builder
 ARG DEP_VERSION="0.4.1"
-RUN apk update && apk add bash git
+RUN apt-get update && \
+    apt-get install -y bash git
 ADD https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 /usr/bin/dep
 RUN chmod +x /usr/bin/dep
 
@@ -24,7 +25,9 @@ WORKDIR ${GOPATH}/src/k8s.io/spark-on-k8s-operator
 COPY Gopkg.toml Gopkg.lock ./
 RUN dep ensure -vendor-only
 COPY . ./
-RUN go generate && go build -o /usr/bin/spark-operator
+RUN go generate && \
+    GOOS=linux GOARCH=amd64 go build -o /usr/bin/spark-operator && \
+    chmod +x /usr/bin/spark-operator
 
 FROM gitlab-registry.cern.ch/db/spark-service/docker-registry/spark-on-k8s:v2.3.0-xrootd-s3
 COPY --from=builder /usr/bin/spark-operator /usr/bin/
