@@ -50,8 +50,8 @@ instead, the `--override` flag should be specified.
 
 For uploading to GCS, the value should be in the form of `gs://<bucket>`. The bucket must exist and uploading fails if 
 otherwise. The local dependencies will be uploaded to the path 
-`spark-app-dependencies/<SaprkApplication namespace>/<SparkApplication name>` in the given bucket. It replaces the 
-file path of each local dependency with the URI of the remote copy in the parsed `SaprkApplication` object if uploading
+`spark-app-dependencies/<SparkApplication namespace>/<SparkApplication name>` in the given bucket. It replaces the 
+file path of each local dependency with the URI of the remote copy in the parsed `SparkApplication` object if uploading
 is successful. 
 
 Usage:
@@ -80,6 +80,73 @@ $ sparkctl create <path to YAML file> --upload-to gs://<bucket> --project <GCP p
 ``` 
 
 Publicly available files are referenced through URIs of the form `https://storage.googleapis.com/bucket/path/to/file`.
+
+##### Uploading to S3 (S3A)
+
+For uploading to S3, the value should be in the form of `s3a://<bucket>`. The bucket must exist and uploading fails if 
+otherwise. The local dependencies will be uploaded to the path 
+`spark-app-dependencies/<SparkApplication namespace>/<SparkApplication name>` in the given bucket. It replaces the 
+file path of each local dependency with the URI of the remote copy in the parsed `SparkApplication` object if uploading
+is successful. 
+
+Usage:
+```bash
+$ sparkctl create <path to YAML file> --upload-to s3a://<bucket>
+```
+
+Note that uploading to S3 with [AWS SDK](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) requires credentials to be specified. 
+For GCP, the S3 Interoperability credentials can be retrieved as described [here](https://cloud.google.com/storage/docs/migrating#keys). 
+SDK uses the default credential provider chain to find AWS credentials. The SDK uses the first provider in the chain that returns credentials without an error. 
+The default provider chain looks for credentials in the following order:
+
+- Environment variables
+    ```
+    AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY
+    AWS_SESSION_TOKEN (optional)
+    ```
+- Shared credentials file (.aws/credentials)
+    ```
+    [default]
+    aws_access_key_id = <YOUR_ACCESS_KEY_ID>
+    aws_secret_access_key = <YOUR_SECRET_ACCESS_KEY>
+    ```
+- If your application is running on an Amazon EC2 instance, IAM role for Amazon EC2.
+
+For more information about AWS SDK authentication, please check 
+[Specifying Credentials](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html#specifying-credentials).
+
+By default, the uploaded dependencies are not made publicly accessible and are referenced using URIs in the form of 
+`s3a://bucket/path/to/file`. Such dependencies are referenced through URIs of the form `s3a://bucket/path/to/file`. To 
+download the dependencies from S3, a custom-built Spark init-container with the required 
+jars ( e.g. `hadoop-aws-2.7.6.jar`, `aws-java-sdk-1.7.6.jar`) in your classpath, 
+and `spark-default.conf` with the AWS keys and the S3A FileSystemClass (you can also use `hadoopConf` in the SparkApplication YAML):
+
+```
+spark.hadoop.fs.s3a.access.key XXXXXXX
+spark.hadoop.fs.s3a.secret.key XXXXXXX
+spark.hadoop.fs.s3a.impl org.apache.hadoop.fs.s3a.S3AFileSystem
+```
+
+NOTE: In Spark 2.3.0 with init-containers used for Spark with Kubernetes as resource manager, 
+the dependencies are not mounted in proper location (e.g. application file is not mounted in jars folder)
+
+If you want to make uploaded dependencies publicly available so they can be downloaded by the built-in init-container,
+simply add `--public` to the `create` command, as the following example shows:
+
+```bash
+$ sparkctl create <path to YAML file> --upload-to s3a://<bucket> --public
+``` 
+
+Publicly available files are referenced through URIs of the form `https://<bucket>.storage.googleapis.com/path/to/file`.
+
+If you want to use custom S3 endpoint, add `--endpoint-url` and `--region`:
+
+```bash
+$ sparkctl create <path to YAML file> --endpoint-url <endpoint-protocol>://<endpoint-url> --region <endpoint-region> --upload-to s3://<bucket>
+``` 
+
+In that case, publicly available files are referenced through URIs of the form `<endpoint-protocol>://<bucket>.<endpoint-url>/path/to/file`.
 
 ### List
 
